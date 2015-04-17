@@ -26,7 +26,7 @@ func blowfishDecrypt(et, key []byte) []byte {
     panic(err)
   }
   decrypted := et[blowfish.BlockSize:]
-  if len(decrypted)%blowfish.BlockSize != 0 {
+  if len(decrypted) % blowfish.BlockSize != 0 {
     panic("decrypted is not a multiple of blowfish.BlockSize")
   }
   dcbc := cipher.NewCBCDecrypter(dcipher, et[:blowfish.BlockSize])
