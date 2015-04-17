@@ -71,36 +71,36 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func main() {
-  var aciton, path, key, security_pass, security_key string
-  default_db := "sgpm.dwarf"
+  var aciton, path, key, securityPass, securityKey string
+  defaultDB := "sgpm.dwarf"
 
   secretkey := getSecretKey()
 
   if path = os.Getenv("SGPM_DB_PATH"); len(path) <= 0 {
-    fmt.Printf("Database [" + default_db + "]: ")
+    fmt.Printf("Database [" + defaultDB + "]: ")
     fmt.Scanf("%s", &path)
     if len(path) <= 0 {
-      path = default_db
+      path = defaultDB
     }
   }
 
   ddb := dwarfdb.DwarfDBLoad(path, true)
 
-  if security_pass = os.Getenv("SGPM_PASS"); len(security_pass) <= 0 {
-    security_pass = "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
+  if securityPass = os.Getenv("SGPM_PASS"); len(securityPass) <= 0 {
+    securityPass = "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
   }
-  if security_key = os.Getenv("SGPM_KEY"); len(security_key) <= 0 {
-    security_key = "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
+  if securityKey = os.Getenv("SGPM_KEY"); len(securityKey) <= 0 {
+    securityKey = "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
   }
 
-  pass, err := ddb.Get(security_key)
+  pass, err := ddb.Get(securityKey)
   if err == nil {
-    if !strings.Contains(decryptPass(pass.(string), secretkey), security_pass) {
+    if !strings.Contains(decryptPass(pass.(string), secretkey), securityPass) {
       os.Exit(0)
     }
   } else {
     fmt.Printf("New Database")
-    ddb.Set(security_key, encryptPass(security_pass, secretkey))
+    ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
 
   actions := []string{"del", "find", "get", "new"}
@@ -121,7 +121,7 @@ func main() {
     for i := 0; i < len(keys); i++ {
       ckey := keys[i]
       if strings.Contains(ckey, key) {
-        if ckey != security_key {
+        if ckey != securityKey {
           fmt.Printf("%s\n", ckey)
         }
       }
