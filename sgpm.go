@@ -1,11 +1,11 @@
 package main
 
 import (
-  "github.com/zokis/dwarfdb"
   "code.google.com/p/go.crypto/blowfish"
   "crypto/cipher"
   "fmt"
   "github.com/gcmurphy/getpass"
+  "github.com/zokis/dwarfdb"
   "os"
   "strings"
 )
@@ -45,15 +45,15 @@ func blowfishEncrypt(ppt, key []byte) []byte {
   return ciphertext
 }
 
-func decryptPass(pass, secretkey string) string{
+func decryptPass(pass, secretkey string) string {
   return string(blowfishDecrypt([]byte(pass), []byte(secretkey))[:])
 }
 
-func encryptPass(pass, secretkey string) string{
+func encryptPass(pass, secretkey string) string {
   return string(blowfishEncrypt(blowfishChecksizeAndPad([]byte(pass)), []byte(secretkey))[:])
 }
 
-func getSecretKey() string{
+func getSecretKey() string {
   secretkey, err := getpass.GetPassWithOptions("Secret Key: ", 1, getpass.DefaultMaxPass)
   if err != nil {
     os.Exit(0)
@@ -71,19 +71,20 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func main() {
-  var aciton, path, key string
-  var security_pass, security_key string
+  var aciton, path, key, security_pass, security_key string
+  default_db := "sgpm.dwarf"
 
-  fmt.Printf("Database [sgpm.dwarf]: ")
-  fmt.Scanf("%s", &path)
+  secretkey := getSecretKey()
 
-  if path == "" {
-    path = "sgpm.dwarf"
+  if path = os.Getenv("SGPM_DB_PATH"); len(path) <= 0 {
+    fmt.Printf("Database [" + default_db + "]: ")
+    fmt.Scanf("%s", &path)
+    if len(path) <= 0 {
+      path = default_db
+    }
   }
 
   ddb := dwarfdb.DwarfDBLoad(path, true)
-
-  secretkey := getSecretKey()
 
   if security_pass = os.Getenv("SGPM_PASS"); len(security_pass) <= 0 {
     security_pass = "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
@@ -92,20 +93,20 @@ func main() {
     security_key = "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
   }
 
-
   pass, err := ddb.Get(security_key)
   if err == nil {
     if !strings.Contains(decryptPass(pass.(string), secretkey), security_pass) {
       os.Exit(0)
     }
   } else {
+    fmt.Printf("New Database")
     ddb.Set(security_key, encryptPass(security_pass, secretkey))
   }
 
   actions := []string{"del", "find", "get", "new"}
   aciton_ok := false
   for !aciton_ok {
-    fmt.Printf("Aciton ["+strings.Join(actions, " ")+"]: ")
+    fmt.Printf("Aciton [" + strings.Join(actions, " ") + "]: ")
     fmt.Scanf("%s", &aciton)
     if stringInSlice(aciton, actions) {
       aciton_ok = true
@@ -120,7 +121,7 @@ func main() {
     for i := 0; i < len(keys); i++ {
       ckey := keys[i]
       if strings.Contains(ckey, key) {
-        if ckey != security_key{
+        if ckey != security_key {
           fmt.Printf("%s\n", ckey)
         }
       }
