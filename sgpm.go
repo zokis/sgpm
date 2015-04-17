@@ -120,8 +120,10 @@ func main() {
       }
     }
   } else if aciton == "get" {
-    pass, _ := ddb.Get(key)
-    fmt.Println(decryptPass(pass.(string), secretkey))
+    pass, err := ddb.Get(key)
+    if err == nil {
+      fmt.Println(decryptPass(pass.(string), secretkey))
+    }
   } else if aciton == "new" {
     var pass string
     var err error
