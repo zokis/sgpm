@@ -6,6 +6,7 @@ import (
   "fmt"
   "github.com/gcmurphy/getpass"
   "github.com/zokis/dwarfdb"
+  "github.com/zokis/gopassgen"
   "os"
   "strings"
 )
@@ -103,7 +104,7 @@ func main() {
     ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
 
-  actions := []string{"del", "find", "get", "new"}
+  actions := []string{"del", "find", "get", "new", "gen"}
   acitonOk := false
   for !acitonOk {
     fmt.Printf("Aciton [" + strings.Join(actions, " ") + "]: ")
@@ -113,8 +114,10 @@ func main() {
     }
   }
 
-  fmt.Printf("Key: ")
-  fmt.Scanf("%s", &key)
+  if aciton != "gen" {
+    fmt.Printf("Key: ")
+    fmt.Scanf("%s", &key)
+  }
 
   if aciton == "find" {
     keys := ddb.GetAll()
@@ -145,6 +148,8 @@ func main() {
     ddb.Set(key, encryptPass(pass, secretkey))
   } else if aciton == "del" {
     ddb.Rem(key)
+  } else if aciton == "gen" {
+    fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLenght(13)))
   }
   os.Exit(0)
 }
