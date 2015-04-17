@@ -54,7 +54,7 @@ func encryptPass(pass, secretkey string) string{
 }
 
 func getSecretKey() string{
-  secretkey, err := getpass.GetPassWithOptions("Secret Key: ", 1, 64)
+  secretkey, err := getpass.GetPassWithOptions("Secret Key: ", 1, getpass.DefaultMaxPass)
   if err != nil {
     os.Exit(0)
   }
@@ -66,7 +66,7 @@ func stringInSlice(a string, list []string) bool {
     if b == a {
       return true
     }
-}
+  }
   return false
 }
 
@@ -84,25 +84,26 @@ func main() {
 
   secretkey := getSecretKey()
 
-  security_pass := "}])>-security-<([{"
-  security_key := "{[(<-security->)]}"
+  security_pass := "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
+  security_key :=  "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
 
   pass, err := ddb.Get(security_key)
   if err != nil {
     ddb.Set(security_key, encryptPass(security_pass, secretkey))
   } else {
-    if strings.EqualFold(strings.TrimSpace(decryptPass(pass.(string), secretkey)), security_pass) {
+    if strings.Contains(decryptPass(pass.(string), secretkey), security_pass) == false {
       os.Exit(0)
     }
   }
 
-  actions := []string{"get", "find", "new", "del"}
-
-  fmt.Printf("Aciton ["+strings.Join(actions, ", ")+"]: ")
-  fmt.Scanf("%s", &aciton)
-
-  if stringInSlice(aciton, actions) == false {
-    os.Exit(1)
+  actions := []string{"del", "find", "get", "new"}
+  aciton_ok := false
+  for aciton_ok == false {
+    fmt.Printf("Aciton ["+strings.Join(actions, " ")+"]: ")
+    fmt.Scanf("%s", &aciton)
+    if stringInSlice(aciton, actions) {
+      aciton_ok = true
+    }
   }
 
   fmt.Printf("Key: ")
