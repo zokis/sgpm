@@ -72,6 +72,7 @@ func stringInSlice(a string, list []string) bool {
 
 func main() {
   var aciton, path, key string
+  var security_pass, security_key string
 
   fmt.Printf("Database [sgpm.dwarf]: ")
   fmt.Scanf("%s", &path)
@@ -84,21 +85,26 @@ func main() {
 
   secretkey := getSecretKey()
 
-  security_pass := "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
-  security_key :=  "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
+  if security_pass = os.Getenv("SGPM_PASS"); len(security_pass) <= 0 {
+    security_pass = "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
+  }
+  if security_key = os.Getenv("SGPM_KEY"); len(security_key) <= 0 {
+    security_key = "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
+  }
+
 
   pass, err := ddb.Get(security_key)
-  if err != nil {
-    ddb.Set(security_key, encryptPass(security_pass, secretkey))
-  } else {
-    if strings.Contains(decryptPass(pass.(string), secretkey), security_pass) == false {
+  if err == nil {
+    if !strings.Contains(decryptPass(pass.(string), secretkey), security_pass) {
       os.Exit(0)
     }
+  } else {
+    ddb.Set(security_key, encryptPass(security_pass, secretkey))
   }
 
   actions := []string{"del", "find", "get", "new"}
   aciton_ok := false
-  for aciton_ok == false {
+  for !aciton_ok {
     fmt.Printf("Aciton ["+strings.Join(actions, " ")+"]: ")
     fmt.Scanf("%s", &aciton)
     if stringInSlice(aciton, actions) {
@@ -129,7 +135,7 @@ func main() {
     var err error
     pass_ok := false
 
-    for pass_ok == false {
+    for !pass_ok {
       pass, err = getpass.GetPassWithOptions("Password: ", 1, getpass.DefaultMaxPass)
       if err == nil {
         pass_ok = true
