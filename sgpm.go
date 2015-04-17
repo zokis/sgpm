@@ -104,12 +104,12 @@ func main() {
   }
 
   actions := []string{"del", "find", "get", "new"}
-  aciton_ok := false
-  for !aciton_ok {
+  acitonOk := false
+  for !acitonOk {
     fmt.Printf("Aciton [" + strings.Join(actions, " ") + "]: ")
     fmt.Scanf("%s", &aciton)
     if stringInSlice(aciton, actions) {
-      aciton_ok = true
+      acitonOk = true
     }
   }
 
@@ -134,12 +134,12 @@ func main() {
   } else if aciton == "new" {
     var pass string
     var err error
-    pass_ok := false
+    passOk := false
 
-    for !pass_ok {
+    for !passOk {
       pass, err = getpass.GetPassWithOptions("Password: ", 1, getpass.DefaultMaxPass)
       if err == nil {
-        pass_ok = true
+        passOk = true
       }
     }
     ddb.Set(key, encryptPass(pass, secretkey))
