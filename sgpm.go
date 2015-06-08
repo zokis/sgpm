@@ -8,6 +8,7 @@ import (
   "github.com/zokis/dwarfdb"
   "github.com/zokis/gopassgen"
   "os"
+  "strconv"
   "strings"
 )
 
@@ -72,7 +73,7 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func main() {
-  var aciton, path, key, securityPass, securityKey string
+  var aciton, key, norKey, path, securityKey, securityPass string
   defaultDB := "sgpm.dwarf"
 
   secretkey := getSecretKey()
@@ -87,6 +88,9 @@ func main() {
 
   ddb := dwarfdb.DwarfDBLoad(path, true)
 
+  if norKey = os.Getenv("SGPM_NOR_KEY"); len(norKey) <= 0 {
+    norKey = "2d2d5b4e5d5b4f5d5b525d7c5b485d5b455d5b585d2d2d"
+  }
   if securityPass = os.Getenv("SGPM_PASS"); len(securityPass) <= 0 {
     securityPass = "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
   }
@@ -97,12 +101,29 @@ func main() {
   pass, err := ddb.Get(securityKey)
   if err == nil {
     if !strings.Contains(decryptPass(pass.(string), secretkey), securityPass) {
+      nor, nor_err := ddb.Get(norKey)
+      nor_str := nor.(string)
+      if nor_err == nil {
+        if nor_str == "3" {
+          if ddb.DelDB() {
+            fmt.Println("the database was destroyed")
+          }
+        } else {
+          new_nor, atoi_err := strconv.Atoi(nor_str)
+          if atoi_err == nil{
+            ddb.Set(norKey, strconv.Itoa(new_nor + 1))
+          } else {
+            ddb.Set(norKey, "1")
+          }
+        }
+      }
       os.Exit(0)
     }
   } else {
     fmt.Printf("New Database")
     ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
+  ddb.Set(norKey, "0")
 
   actions := []string{"del", "find", "get", "new", "gen"}
   acitonOk := false
