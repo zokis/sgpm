@@ -1,15 +1,15 @@
 package main
 
 import (
-  "code.google.com/p/go.crypto/blowfish"
-  "crypto/cipher"
-  "fmt"
-  "github.com/gcmurphy/getpass"
-  "github.com/zokis/dwarfdb"
-  "github.com/zokis/gopassgen"
   "os"
+  "fmt"
   "strconv"
   "strings"
+  "crypto/cipher"
+  "github.com/zokis/dwarfdb"
+  "github.com/zokis/gopassgen"
+  "github.com/gcmurphy/getpass"
+  "code.google.com/p/go.crypto/blowfish"
 )
 
 func blowfishChecksizeAndPad(pt []byte) []byte {
@@ -101,17 +101,17 @@ func main() {
   pass, err := ddb.Get(securityKey)
   if err == nil {
     if !strings.Contains(decryptPass(pass.(string), secretkey), securityPass) {
-      nor, nor_err := ddb.Get(norKey)
-      nor_str := nor.(string)
-      if nor_err == nil {
-        if nor_str == "3" {
+      nor, norErr := ddb.Get(norKey)
+      norStr := nor.(string)
+      if norErr == nil {
+        if norStr == "3" {
           if ddb.DelDB() {
             fmt.Println("the database was destroyed")
           }
         } else {
-          new_nor, atoi_err := strconv.Atoi(nor_str)
-          if atoi_err == nil{
-            ddb.Set(norKey, strconv.Itoa(new_nor + 1))
+          newNor, atoiErr := strconv.Atoi(norStr)
+          if atoiErr == nil{
+            ddb.Set(norKey, strconv.Itoa(newNor + 1))
           } else {
             ddb.Set(norKey, "1")
           }
@@ -170,7 +170,7 @@ func main() {
   } else if aciton == "del" {
     ddb.Rem(key)
   } else if aciton == "gen" {
-    fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLenght(13)))
+    fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLength(13)))
   }
   os.Exit(0)
 }
