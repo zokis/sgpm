@@ -139,12 +139,12 @@ func main() {
       norStr := nor.(string)
       delDB := false
       if norErr == nil {
-        if norStr == "3" {
+        if norStr == "101" {
           delDB = true
         } else {
-          newNor, atoiErr := strconv.Atoi(norStr)
-          if atoiErr == nil{
-            ddb.Set(norKey, strconv.Itoa(newNor + 1))
+          newNor, cErr := strconv.ParseInt(norStr, 2, 64)
+          if cErr == nil{
+            ddb.Set(norKey, "000" + strconv.FormatInt(int64(newNor + 1), 2))
           } else {
             delDB = true
           }
@@ -161,7 +161,7 @@ func main() {
     secretkey = getSecretKey(1)
     ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
-  ddb.Set(norKey, "0")
+  ddb.Set(norKey, "00000")
   if key == "" {
     fmt.Printf("Key: ")
     fmt.Scanf("%s", &key)
