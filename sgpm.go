@@ -8,6 +8,7 @@ import (
   "crypto/cipher"
   "github.com/zokis/dwarfdb"
   "github.com/zokis/gopassgen"
+  "github.com/atotto/clipboard"
   "github.com/gcmurphy/getpass"
   "code.google.com/p/go.crypto/blowfish"
 )
@@ -55,45 +56,55 @@ func encryptPass(pass, secretkey string) string {
   return string(blowfishEncrypt(blowfishChecksizeAndPad([]byte(pass)), []byte(secretkey))[:])
 }
 
-func getSecretKey() string {
-  secretkey, err := getpass.GetPassWithOptions("Secret Key: ", 1, getpass.DefaultMaxPass)
+func getSecretKey(c int) string {
+  secretkey, err := getpass.GetPassWithOptions("Secret Key: ", c, getpass.DefaultMaxPass)
   if err != nil {
     os.Exit(0)
   }
   return secretkey
 }
 
-func stringInSlice(a string, list []string) bool {
-  for _, b := range list {
-    if b == a {
-      return true
+func stringInSlice(s string, list []string) bool {
+  for k, e := range list {
+    if e == s {
+      return k + 1
     }
   }
-  return false
+  return 0
 }
 
 func main() {
   var aciton, key, norKey, path, securityKey, securityPass string
+  acitonOk := false
+  copy := true
   keyInt := 13
+  _C := "-C"
+  _E := ""
   _DEL := "del"
   _FIND := "find"
   _GEN := "gen"
   _GET := "get"
   _NEW := "new"
   actions := []string{_DEL, _FIND, _GEN, _GET, _NEW}
-  acitonOk := false
-  args := os.Args
-  if len(args) >= 2 {
-    aciton = args[1]
-    if stringInSlice(aciton, actions) {
+  args := os.Args[1:]
+
+  if stringInSlice(_C, args) > 0 {
+    copy = false
+  }
+  if len(args) >= 1 {
+    aciton = args[0]
+    if stringInSlice(aciton, actions) > 0 {
       acitonOk = true
     }
-    if len(args) >= 3 {
-      key = args[2]
+    if len(args) >= 2 {
+      key = args[1]
+      if key == _C {
+        key = _E
+      }
     }
   }
   if aciton == _GEN {
-    if key != "" {
+    if key != _E {
       var err error
       keyInt, err = strconv.Atoi(key)
       if err != nil {
@@ -121,7 +132,7 @@ func main() {
   if securityKey = os.Getenv("SGPM_KEY"); len(securityKey) <= 0 {
     securityKey = "0x117498f0ea387cea4b00f77e8693ff9367a6L6"
   }
-  secretkey := getSecretKey()
+  secretkey := getSecretKey(0)
   pass, err := ddb.Get(securityKey)
   if err == nil {
     if !strings.Contains(decryptPass(pass.(string), secretkey), securityPass) {
@@ -151,9 +162,9 @@ func main() {
   for !acitonOk {
     fmt.Printf("Aciton [" + strings.Join(actions, " ") + "]: ")
     fmt.Scanf("%s", &aciton)
-    acitonOk = stringInSlice(aciton, actions)
+    acitonOk = stringInSlice(aciton, actions) > 0
   }
-  if aciton != _GEN && key == "" {
+  if aciton != _GEN && key == _E {
     fmt.Printf("Key: ")
     fmt.Scanf("%s", &key)
   }
@@ -168,7 +179,14 @@ func main() {
   } else if aciton == _GET {
     pass, err := ddb.Get(key)
     if err == nil {
-      fmt.Println(decryptPass(pass.(string), secretkey))
+      dp := decryptPass(pass.(string), secretkey)
+      if copy {
+        if err := clipboard.WriteAll(string(dp)); err != nil {
+          fmt.Println("an error occurred while copying the password to the clipboard")
+        }
+      } else {
+        fmt.Println(dp)
+      }
     }
   } else if aciton == _NEW {
     var pass string
