@@ -74,7 +74,13 @@ func stringInSlice(a string, list []string) bool {
 
 func main() {
   var aciton, key, norKey, path, securityKey, securityPass string
-  actions := []string{"del", "find", "get", "new", "gen"}
+  keyInt := 13
+  _DEL := "del"
+  _FIND := "find"
+  _GEN := "gen"
+  _GET := "get"
+  _NEW := "new"
+  actions := []string{_DEL, _FIND, _GEN, _GET, _NEW}
   acitonOk := false
   args := os.Args
   if len(args) >= 2 {
@@ -86,10 +92,18 @@ func main() {
       key = args[2]
     }
   }
-
+  if aciton == _GEN {
+    if key != "" {
+      var err error
+      keyInt, err = strconv.Atoi(key)
+      if err != nil {
+        keyInt = 13
+      }
+    }
+    fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLength(keyInt)))
+    os.Exit(0)
+  }
   defaultDB := "sgpm.dwarf"
-  secretkey := getSecretKey()
-
   if path = os.Getenv("SGPM_DB_PATH"); len(path) <= 0 {
     fmt.Printf("Database [" + defaultDB + "]: ")
     fmt.Scanf("%s", &path)
@@ -97,9 +111,7 @@ func main() {
       path = defaultDB
     }
   }
-
   ddb := dwarfdb.DwarfDBLoad(path, true)
-
   if norKey = os.Getenv("SGPM_NOR_KEY"); len(norKey) <= 0 {
     norKey = "2d2d5b4e5d5b4f5d5b525d7c5b485d5b455d5b585d2d2d"
   }
@@ -109,7 +121,7 @@ func main() {
   if securityKey = os.Getenv("SGPM_KEY"); len(securityKey) <= 0 {
     securityKey = "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
   }
-
+  secretkey := getSecretKey()
   pass, err := ddb.Get(securityKey)
   if err == nil {
     if !strings.Contains(decryptPass(pass.(string), secretkey), securityPass) {
@@ -136,49 +148,40 @@ func main() {
     ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
   ddb.Set(norKey, "0")
-
   for !acitonOk {
     fmt.Printf("Aciton [" + strings.Join(actions, " ") + "]: ")
     fmt.Scanf("%s", &aciton)
-    if stringInSlice(aciton, actions) {
-      acitonOk = true
-    }
+    acitonOk = stringInSlice(aciton, actions)
   }
-
-  if aciton != "gen" && key == "" {
+  if aciton != _GEN && key == "" {
     fmt.Printf("Key: ")
     fmt.Scanf("%s", &key)
   }
-
-  if aciton == "find" {
+  if aciton == _FIND {
     keys := ddb.GetAll()
     for i := 0; i < len(keys); i++ {
       ckey := keys[i]
-      if strings.Contains(ckey, key) {
-        if ckey != securityKey {
-          fmt.Printf("%s\n", ckey)
-        }
+      if ckey != securityKey && ckey != norKey && strings.Contains(ckey, key) {
+        fmt.Printf("%s\n", ckey)
       }
     }
-  } else if aciton == "get" {
+  } else if aciton == _GET {
     pass, err := ddb.Get(key)
     if err == nil {
       fmt.Println(decryptPass(pass.(string), secretkey))
     }
-  } else if aciton == "new" {
+  } else if aciton == _NEW {
     var pass string
-    var err error
     passOk := false
-
     for !passOk {
       pass, err = getpass.GetPassWithOptions("Password: ", 1, getpass.DefaultMaxPass)
-      if err == nil {
-        passOk = true
-      }
+      passOk = err == nil
     }
     ddb.Set(key, encryptPass(pass, secretkey))
-  } else if aciton == "del" {
+  } else if aciton == _DEL {
     ddb.Rem(key)
+  } else if aciton == _GEN {
+    fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLength(13)))
   }
   os.Exit(0)
 }
