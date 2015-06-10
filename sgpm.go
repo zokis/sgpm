@@ -74,8 +74,20 @@ func stringInSlice(a string, list []string) bool {
 
 func main() {
   var aciton, key, norKey, path, securityKey, securityPass string
-  defaultDB := "sgpm.dwarf"
+  actions := []string{"del", "find", "get", "new", "gen"}
+  acitonOk := false
+  args := os.Args
+  if len(args) >= 2 {
+    aciton = args[1]
+    if stringInSlice(aciton, actions) {
+      acitonOk = true
+    }
+    if len(args) >= 3 {
+      key = args[2]
+    }
+  }
 
+  defaultDB := "sgpm.dwarf"
   secretkey := getSecretKey()
 
   if path = os.Getenv("SGPM_DB_PATH"); len(path) <= 0 {
@@ -120,13 +132,11 @@ func main() {
       os.Exit(0)
     }
   } else {
-    fmt.Printf("New Database")
+    fmt.Println("New Database")
     ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
   ddb.Set(norKey, "0")
 
-  actions := []string{"del", "find", "get", "new", "gen"}
-  acitonOk := false
   for !acitonOk {
     fmt.Printf("Aciton [" + strings.Join(actions, " ") + "]: ")
     fmt.Scanf("%s", &aciton)
@@ -135,7 +145,7 @@ func main() {
     }
   }
 
-  if aciton != "gen" {
+  if aciton != "gen" && key == "" {
     fmt.Printf("Key: ")
     fmt.Scanf("%s", &key)
   }
@@ -169,8 +179,6 @@ func main() {
     ddb.Set(key, encryptPass(pass, secretkey))
   } else if aciton == "del" {
     ddb.Rem(key)
-  } else if aciton == "gen" {
-    fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLength(13)))
   }
   os.Exit(0)
 }
