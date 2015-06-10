@@ -113,13 +113,13 @@ func main() {
   }
   ddb := dwarfdb.DwarfDBLoad(path, true)
   if norKey = os.Getenv("SGPM_NOR_KEY"); len(norKey) <= 0 {
-    norKey = "2d2d5b4e5d5b4f5d5b525d7c5b485d5b455d5b585d2d2d"
+    norKey = "0x2b4674dca78cfde8d3d5a0d100996c941038ef71100"
   }
   if securityPass = os.Getenv("SGPM_PASS"); len(securityPass) <= 0 {
-    securityPass = "3a7d5d293e2d2d3c285b7b7c7d5d293e2d2d3c285b7b3a"
+    securityPass = "0x27690b1e0e5bf93eb514035c824b85d3c274c"
   }
   if securityKey = os.Getenv("SGPM_KEY"); len(securityKey) <= 0 {
-    securityKey = "2e2d3e295d7d7b5b283c2d7c2d3e295d7d7b5b283c2d2e"
+    securityKey = "0x117498f0ea387cea4b00f77e8693ff9367a6L6"
   }
   secretkey := getSecretKey()
   pass, err := ddb.Get(securityKey)
