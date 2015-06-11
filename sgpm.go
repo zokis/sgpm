@@ -136,15 +136,14 @@ func main() {
     secretkey = getSecretKey(0)
     if !strings.Contains(decryptPass(pass.(string), secretkey), securityPass) {
       nor, norErr := ddb.Get(norKey)
-      norStr := nor.(string)
+      newNor, cErr := strconv.ParseInt(nor.(string), 2, 64)
       delDB := false
       if norErr == nil {
-        if norStr == "101" {
+        if newNor > 3 {
           delDB = true
         } else {
-          newNor, cErr := strconv.ParseInt(norStr, 2, 64)
           if cErr == nil{
-            ddb.Set(norKey, "000" + strconv.FormatInt(int64(newNor + 1), 2))
+            ddb.Set(norKey, strconv.FormatInt(int64(newNor + 1), 2))
           } else {
             delDB = true
           }
@@ -161,7 +160,7 @@ func main() {
     secretkey = getSecretKey(1)
     ddb.Set(securityKey, encryptPass(securityPass, secretkey))
   }
-  ddb.Set(norKey, "00000")
+  ddb.Set(norKey, "1")
   if key == "" {
     fmt.Printf("Key: ")
     fmt.Scanf("%s", &key)
