@@ -42,6 +42,32 @@ var (
 
 )
 
+func cipherC(text string, direction int) string {
+    shift, offset := rune(25), rune(26)
+    runes := []rune(text)
+    for index, char := range runes {
+        switch direction {
+        case -1:
+            if char >= 'a'+shift && char <= 'z' || char >= 'A'+shift && char <= 'Z' {
+                char = char - shift
+            } else if char >= 'a' && char < 'a'+shift || char >= 'A' && char < 'A'+shift {
+                char = char - shift + offset
+            }
+        case +1:
+            if char >= 'a' && char <= 'z'-shift || char >= 'A' && char <= 'Z'-shift {
+                char = char + shift
+            } else if char > 'z'-shift && char <= 'z' || char > 'Z'-shift && char <= 'Z' {
+                char = char + shift - offset
+            }
+        }
+        runes[index] = char
+    }
+    return string(runes)
+}
+
+func encode(text string) string { return cipherC(text, -1) }
+func decode(text string) string { return cipherC(text, +1) }
+
 func blowfishChecksizeAndPad(pt []byte) []byte {
   mod := len(pt) % blowfish.BlockSize
   if mod != 0 {
@@ -98,16 +124,16 @@ func main() {
   switch kingpin.MustParse(app.Parse(os.Args[1:])) {
     case cGet.FullCommand():
       aciton = _GET
-      key = string(*gKey)
+      key = encode(string(*gKey))
     case cNew.FullCommand():
       aciton = _NEW
-      key = string(*nKey)
+      key = encode(string(*nKey))
     case cFind.FullCommand():
       aciton = _FIND
-      key = string(*fKey)
+      key = encode(string(*fKey))
     case cDel.FullCommand():
       aciton = _DEL
-      key = string(*dKey)
+      key = encode(string(*dKey))
     case cGen.FullCommand():
       fmt.Printf("%s\n", gopassgen.NewPassword(gopassgen.OptionLength(*gLen)))
       os.Exit(0)
@@ -122,14 +148,14 @@ func main() {
     }
   }
   ddb := dwarfdb.DwarfDBLoad(path, true)
-  if norKey = os.Getenv("SGPM_NOR_KEY"); len(norKey) <= 0 {
-    norKey = "0x2b4674dca78cfde8d3d5a0d100996c941038ef71100"
+  if norKey = encode(os.Getenv("SGPM_NOR_KEY")); len(norKey) <= 0 {
+    norKey = encode("0x2b4674dca78cfde8d3d5a0d100996c941038ef71100")
   }
-  if securityKey = os.Getenv("SGPM_KEY"); len(securityKey) <= 0 {
-    securityKey = "0x117498f0ea387cea4b00f77e8693ff9367a6L6"
+  if securityKey = encode(os.Getenv("SGPM_KEY")); len(securityKey) <= 0 {
+    securityKey = encode("0x117498f0ea387cea4b00f77e8693ff9367a6L6")
   }
-  if securityPass = os.Getenv("SGPM_PASS"); len(securityPass) <= 0 {
-    securityPass = "0x27690b1e0e5bf93eb514035c824b85d3c274c"
+  if securityPass = encode(os.Getenv("SGPM_PASS")); len(securityPass) <= 0 {
+    securityPass = encode("0x27690b1e0e5bf93eb514035c824b85d3c274c")
   }
   pass, err := ddb.Get(securityKey)
   if err == nil {
@@ -170,7 +196,7 @@ func main() {
     for i := 0; i < len(keys); i++ {
       ckey := keys[i]
       if ckey != securityKey && ckey != norKey && strings.Contains(ckey, key) {
-        fmt.Printf("%s\n", ckey)
+        fmt.Printf("%s\n", decode(ckey))
       }
     }
   } else if aciton == _GET {
